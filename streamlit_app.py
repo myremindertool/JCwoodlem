@@ -31,21 +31,24 @@ st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
         .message-box {
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 0.75rem;
             margin: 0.5rem 0;
-            background-color: #f1f3f6;
+            background-color: #f0f8ff;
             display: flex;
             flex-direction: column;
             font-size: 0.95rem;
+            border-left: 5px solid #87ceeb;
         }
         .sender-header {
             font-weight: 600;
-            color: #202020;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
+            color: #333;
             margin-bottom: 0.25rem;
+        }
+        .timestamp {
+            font-size: 0.75rem;
+            color: #888;
+            margin-left: 0.5rem;
         }
         .chat-area {
             max-height: 600px;
@@ -79,12 +82,10 @@ if selected_file:
         with st.container():
             st.markdown("<div class='chat-area'>", unsafe_allow_html=True)
             for m in filtered:
+                sender_line = f"<span class='sender-header'>{m['sender']}<span class='timestamp'> &nbsp;&nbsp;&nbsp;{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span></span>"
                 st.markdown(f"""
                     <div class='message-box'>
-                        <div class='sender-header'>
-                            <span>{m['sender']}</span>
-                            <span>{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span>
-                        </div>
+                        {sender_line}
                         <div>{m['message']}</div>
                     </div>
                 """, unsafe_allow_html=True)
