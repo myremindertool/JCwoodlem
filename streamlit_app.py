@@ -27,22 +27,20 @@ def parse_chat(content):
     return sorted(messages, key=lambda x: x["datetime"])
 
 # Streamlit UI
-st.set_page_config(page_title="JC Multi WhatsApp Chat Viewer", layout="wide")
-st.title("📱 JC WhatsApp Multi-Chat Viewer")
-st.markdown("Created by **JC**", unsafe_allow_html=True)
+st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
+st.title("💬 JC WhatsApp Multi-Chat Viewer")
+st.markdown("_Created by **JC**_")
 st.markdown("---")
 
-# Show available .txt files
-available_files = [f for f in os.listdir() if f.endswith(".txt")]
+# Only show .txt files (exclude requirements.txt)
+available_files = [f for f in os.listdir() if f.endswith(".txt") and f.lower() != "requirements.txt"]
 selected_file = st.selectbox("📂 Choose a chat file to view:", available_files)
 
 if selected_file:
     with open(selected_file, "r", encoding="utf-8") as file:
         content = file.read()
 
-    # Clean hidden chars
     content = content.replace('\u202f', ' ').replace('\u200e', '')
-
     messages = parse_chat(content)
 
     if not messages:
@@ -53,10 +51,12 @@ if selected_file:
 
         filtered = [m for m in messages if m['sender'] in selected_senders]
 
-        for m in filtered:
-            with st.chat_message("user" if m['sender'].lower() in ['you', 'me', '🔄'] else "assistant"):
-                st.markdown(f"**{m['sender']}**")
-                st.markdown(m['message'])
-                st.caption(m['datetime'].strftime("%d %b %Y • %I:%M %p"))
+        with st.container():
+            for m in filtered:
+                is_me = m['sender'].lower() in ['you', 'me', '🔄']
+                with st.chat_message("user" if is_me else "assistant"):
+                    st.markdown(f"**{m['sender']}**  ")
+                    st.caption(m['datetime'].strftime("%d %b %Y • %I:%M %p"))
+                    st.markdown(m['message'])
 
         st.success(f"✅ Showing {len(filtered)} messages from '{selected_file}'")
