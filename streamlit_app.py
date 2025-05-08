@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import re
 from datetime import datetime
+import hashlib
 
 # Function to parse chat from txt
 def parse_chat(content):
@@ -26,6 +27,12 @@ def parse_chat(content):
 
     return sorted(messages, key=lambda x: x["datetime"])
 
+# Generate consistent color based on sender name
+def sender_color(sender):
+    colors = ["#f0f8ff", "#e6ffe6", "#fff0f5", "#fffdd0", "#e0ffff", "#f5f5dc"]
+    idx = int(hashlib.sha256(sender.encode()).hexdigest(), 16) % len(colors)
+    return colors[idx]
+
 # Streamlit UI
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
@@ -34,11 +41,10 @@ st.markdown("""
             border-radius: 10px;
             padding: 0.75rem;
             margin: 0.5rem 0;
-            background-color: #f0f8ff;
             display: flex;
             flex-direction: column;
             font-size: 0.95rem;
-            border-left: 5px solid #87ceeb;
+            border-left: 5px solid #ccc;
         }
         .sender-header {
             font-weight: 600;
@@ -52,8 +58,15 @@ st.markdown("""
         }
         .chat-area {
             max-height: 600px;
-            overflow-y: auto;
+            overflow-y: scroll;
             padding-right: 1rem;
+        }
+        .chat-scroll-wrapper {
+            height: 600px;
+            overflow-y: auto;
+        }
+        .icon {
+            margin-right: 6px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -80,11 +93,13 @@ if selected_file:
         filtered = [m for m in messages if m['sender'] in selected_senders]
 
         with st.container():
-            st.markdown("<div class='chat-area'>", unsafe_allow_html=True)
+            st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
             for m in filtered:
-                sender_line = f"<span class='sender-header'>{m['sender']}<span class='timestamp'> &nbsp;&nbsp;&nbsp;{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span></span>"
+                color = sender_color(m['sender'])
+                icon = "🗣️"
+                sender_line = f"<span class='sender-header'>{icon} {m['sender']}<span class='timestamp'> &nbsp;&nbsp;&nbsp;{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span></span>"
                 st.markdown(f"""
-                    <div class='message-box'>
+                    <div class='message-box' style='background-color: {color};'>
                         {sender_line}
                         <div>{m['message']}</div>
                     </div>
