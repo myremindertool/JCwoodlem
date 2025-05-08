@@ -28,11 +28,37 @@ def parse_chat(content):
 
 # Streamlit UI
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
+st.markdown("""
+    <style>
+        .message-box {
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background-color: #f1f3f6;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.95rem;
+        }
+        .sender-header {
+            font-weight: 600;
+            color: #202020;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        .chat-area {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("💬 JC WhatsApp Multi-Chat Viewer")
 st.markdown("_Created by **JC**_")
 st.markdown("---")
 
-# Only show .txt files (exclude requirements.txt)
 available_files = [f for f in os.listdir() if f.endswith(".txt") and f.lower() != "requirements.txt"]
 selected_file = st.selectbox("📂 Choose a chat file to view:", available_files)
 
@@ -48,15 +74,20 @@ if selected_file:
     else:
         senders = sorted(set(m['sender'] for m in messages))
         selected_senders = st.multiselect("👤 Filter by sender(s):", options=senders, default=senders)
-
         filtered = [m for m in messages if m['sender'] in selected_senders]
 
         with st.container():
+            st.markdown("<div class='chat-area'>", unsafe_allow_html=True)
             for m in filtered:
-                is_me = m['sender'].lower() in ['you', 'me', '🔄']
-                with st.chat_message("user" if is_me else "assistant"):
-                    st.markdown(f"**{m['sender']}**  ")
-                    st.caption(m['datetime'].strftime("%d %b %Y • %I:%M %p"))
-                    st.markdown(m['message'])
+                st.markdown(f"""
+                    <div class='message-box'>
+                        <div class='sender-header'>
+                            <span>{m['sender']}</span>
+                            <span>{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span>
+                        </div>
+                        <div>{m['message']}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         st.success(f"✅ Showing {len(filtered)} messages from '{selected_file}'")
