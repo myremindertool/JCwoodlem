@@ -29,9 +29,8 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
-# Set page and remove layout spacing
+# Page setup
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
-
 st.markdown("""
     <style>
         .message-box {
@@ -77,6 +76,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Header
 st.title("💬 JC WhatsApp Multi-Chat Viewer")
 st.markdown("_Created by **JC**_")
 st.markdown("---")
@@ -99,13 +99,14 @@ if selected_files:
             selected_senders = st.multiselect(f"👤 Senders ({file})", senders, default=senders, key=f"senders_{idx}")
             search_term = st.text_input(f"🔍 Search ({file})", "", key=f"search_{idx}")
 
-            st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
+            match_count = sum(1 for m in messages if m['sender'] in selected_senders and search_term.lower() in m['message'].lower())
+            st.info(f"Parsed {len(messages)} messages. Showing {match_count} messages after filters.")
 
+            st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
+            any_rendered = False
             last_date = ""
             for m in messages:
-                if m["sender"] not in selected_senders:
-                    continue
-                if search_term.lower() not in m["message"].lower():
+                if m["sender"] not in selected_senders or search_term.lower() not in m["message"].lower():
                     continue
                 current_date = m['datetime'].strftime('%d %b %Y')
                 if current_date != last_date:
@@ -125,5 +126,9 @@ if selected_files:
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+                any_rendered = True
+
+            if not any_rendered:
+                st.markdown("<p style='color:gray; font-style: italic;'>No messages match your filters or search.</p>", unsafe_allow_html=True)
 
             st.markdown("</div>", unsafe_allow_html=True)
