@@ -18,10 +18,11 @@ def parse_chat(content):
             dt = datetime.strptime(f"{match[0]} {match[1]}", "%d/%m/%Y %I:%M:%S %p")
             messages.append({"datetime": dt, "sender": match[2], "message": match[3]})
         except: continue
-    # ✅ Sort newest to oldest
-    return sorted(messages, key=lambda x: x["datetime"], reverse=True)
+    return sorted(messages, key=lambda x: x["datetime"], reverse=True)  # latest first
 
 def sender_color(sender):
+    if sender.lower() == "reshmi":
+        return "#ffffcc"  # light yellow
     colors = ["#f0f8ff", "#e6ffe6", "#fff0f5", "#fffdd0", "#e0ffff", "#f5f5dc"]
     idx = int(hashlib.sha256(sender.encode()).hexdigest(), 16) % len(colors)
     return colors[idx]
@@ -81,7 +82,6 @@ st.markdown("""
             scrollbar-gutter: stable;
         }
 
-        /* Scrollbar styling */
         .chat-scroll-wrapper::-webkit-scrollbar {
             width: 14px;
         }
@@ -99,7 +99,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# JavaScript to trap scroll to chat container
+# JavaScript scroll trap
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -143,14 +143,14 @@ if selected_file:
 
         st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-        # Chat display area with scroll
+        # Chat display
         st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
 
         if not filtered_messages:
             st.markdown("<p style='color:gray'>No messages match filters or search.</p>", unsafe_allow_html=True)
         else:
             last_date = ""
-            for i, m in enumerate(filtered_messages):
+            for m in filtered_messages:
                 date_str = m['datetime'].strftime('%d %b %Y')
                 if date_str != last_date:
                     st.markdown(f"### 📅 {date_str}")
