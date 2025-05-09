@@ -33,6 +33,14 @@ def get_initials(name):
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
+        .fixed-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1000;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eee;
+        }
         .message-box {
             border-radius: 10px;
             padding: 0.75rem;
@@ -64,99 +72,68 @@ st.markdown("""
             margin-right: 0.75rem;
         }
         .chat-scroll-wrapper {
-            height: 600px;
-            overflow-y: scroll;
+            max-height: 70vh;
+            overflow-y: auto;
             padding-right: 1rem;
-            margin-top: 0;
+            margin-top: 1rem;
             border-top: 1px solid #eee;
-            scrollbar-gutter: stable;
-        }
-        .scroll-buttons {
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 5;
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
         }
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
-        a { text-decoration: none; font-weight: bold; font-size: 0.9rem; }
     </style>
 """, unsafe_allow_html=True)
 
-# Header
-st.title("💬 JC WhatsApp Multi-Chat Viewer")
-st.markdown("_Created by **JC**_")
-st.markdown("---")
+# Header + Filters (sticky)
+with st.container():
+    st.markdown("<div class='fixed-header'>", unsafe_allow_html=True)
+    st.title("💬 JC WhatsApp Multi-Chat Viewer")
+    chat_files = [f for f in os.listdir() if f.endswith(".txt") and f.lower() != "requirements.txt"]
+    selected_file = st.selectbox("📂 Choose chat file to view:", chat_files)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-chat_files = [f for f in os.listdir() if f.endswith(".txt") and f.lower() != "requirements.txt"]
-selected_files = st.multiselect("📁 Select chat file(s) to view:", chat_files)
-
-if selected_files:
-    cols = st.columns(len(selected_files))
-    for idx, file in enumerate(selected_files):
-        with open(file, "r", encoding="utf-8") as f:
-            content = f.read().replace('\u202f', ' ').replace('\u200e', '')
-        messages = parse_chat(content)
-        if not messages:
-            cols[idx].warning(f"{file} is empty or invalid.")
-            continue
+if selected_file:
+    with open(selected_file, "r", encoding="utf-8") as f:
+        content = f.read().replace('\u202f', ' ').replace('\u200e', '')
+    messages = parse_chat(content)
+    if not messages:
+        st.warning("No valid messages found.")
+    else:
         senders = sorted(set(m['sender'] for m in messages))
-        with cols[idx]:
-            st.subheader(file)
-            selected_senders = st.multiselect(f"👤 Senders ({file})", senders, default=senders, key=f"senders_{idx}")
-            search_term = st.text_input(f"🔍 Search ({file})", "", key=f"search_{idx}")
+        selected_senders = st.multiselect("👤 Filter senders:", senders, default=senders)
+        search_term = st.text_input("🔍 Search messages:")
 
-            filtered_messages = [
-                m for m in messages
-                if m["sender"] in selected_senders and search_term.lower() in m["message"].lower()
-            ]
+        filtered_messages = [
+            m for m in messages
+            if m['sender'] in selected_senders and search_term.lower() in m['message'].lower()
+        ]
 
-            st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
+        st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-            # Start scroll container
-            st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
+        # Scrollable chat area
+        st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
 
-            # Scroll buttons (sticky)
-            st.markdown("""
-                <div id='top-anchor'></div>
-                <div class='scroll-buttons'>
-                    <div style='display:flex; gap: 10px; justify-content: center;'>
-                        <a href='#top-anchor' onclick="document.getElementById('top-anchor').scrollIntoView({behavior:'smooth'});">🔝 Top</a>
-                        <a href='#middle-anchor' onclick="document.getElementById('middle-anchor').scrollIntoView({behavior:'smooth'});">🔽 Middle</a>
-                        <a href='#bottom-anchor' onclick="document.getElementById('bottom-anchor').scrollIntoView({behavior:'smooth'});">🔚 Bottom</a>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+        if not filtered_messages:
+            st.markdown("<p style='color:gray'>No messages match filters or search.</p>", unsafe_allow_html=True)
+        else:
+            last_date = ""
+            for i, m in enumerate(filtered_messages):
+                date_str = m['datetime'].strftime('%d %b %Y')
+                if date_str != last_date:
+                    st.markdown(f"### 📅 {date_str}")
+                    last_date = date_str
 
-            if not filtered_messages:
-                st.markdown("<p style='color:gray'>No messages match your filters or search.</p>", unsafe_allow_html=True)
-            else:
-                last_date = ""
-                for i, m in enumerate(filtered_messages):
-                    current_date = m['datetime'].strftime('%d %b %Y')
-                    if current_date != last_date:
-                        st.markdown(f"### 📅 {current_date}")
-                        last_date = current_date
-
-                    if i == len(filtered_messages) // 2:
-                        st.markdown("<div id='middle-anchor'></div>", unsafe_allow_html=True)
-
-                    initials = get_initials(m['sender'])
-                    avatar = f"<div class='avatar'>{initials}</div>"
-                    color = sender_color(m['sender'])
-                    sender_line = f"<span class='sender-header'>{m['sender']}<span class='timestamp'> &nbsp;&nbsp;{m['datetime'].strftime('%I:%M %p')}</span></span>"
-                    st.markdown(f"""
-                        <div class='message-box' style='background-color: {color};'>
-                            {avatar}
-                            <div>
-                                {sender_line}
-                                <div>{m['message']}</div>
-                            </div>
+                initials = get_initials(m['sender'])
+                avatar = f"<div class='avatar'>{initials}</div>"
+                color = sender_color(m['sender'])
+                sender_line = f"<span class='sender-header'>{m['sender']}<span class='timestamp'> &nbsp;&nbsp;{m['datetime'].strftime('%I:%M %p')}</span></span>"
+                st.markdown(f"""
+                    <div class='message-box' style='background-color: {color};'>
+                        {avatar}
+                        <div>
+                            {sender_line}
+                            <div>{m['message']}</div>
                         </div>
-                    """, unsafe_allow_html=True)
+                    </div>
+                """, unsafe_allow_html=True)
 
-                st.markdown("<div id='bottom-anchor'></div>", unsafe_allow_html=True)
-
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
