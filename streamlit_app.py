@@ -29,7 +29,7 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
-# Page config and styles
+# Streamlit config and styles
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
@@ -79,12 +79,26 @@ st.markdown("""
             border-top: 1px solid #eee;
             scrollbar-gutter: stable;
         }
+
+        /* Scrollbar styling */
+        .chat-scroll-wrapper::-webkit-scrollbar {
+            width: 14px;
+        }
+        .chat-scroll-wrapper::-webkit-scrollbar-track {
+            background: #f0f0f0;
+        }
+        .chat-scroll-wrapper::-webkit-scrollbar-thumb {
+            background-color: red;
+            border-radius: 6px;
+            border: 3px solid #f0f0f0;
+        }
+
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# JavaScript to trap scroll inside chat container
+# JavaScript to trap scroll to chat container
 st.markdown("""
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -109,6 +123,7 @@ with st.container():
     selected_file = st.selectbox("📂 Choose chat file to view:", chat_files)
     st.markdown("</div>", unsafe_allow_html=True)
 
+# Load and display chat
 if selected_file:
     with open(selected_file, "r", encoding="utf-8") as f:
         content = f.read().replace('\u202f', ' ').replace('\u200e', '')
@@ -127,7 +142,7 @@ if selected_file:
 
         st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-        # Scrollable chat view
+        # Chat display area with custom scroll
         st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
 
         if not filtered_messages:
@@ -153,5 +168,7 @@ if selected_file:
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+
+            st.markdown("<div style='color: gray; font-size: 0.8rem;'>-- End of Chat --</div>", unsafe_allow_html=True)
 
         st.markdown("</div>", unsafe_allow_html=True)
