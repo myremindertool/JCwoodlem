@@ -23,7 +23,7 @@ def parse_chat(content):
 def sender_color(sender):
     clean_sender = sender.strip().lower()
     if "reshmi" in clean_sender:
-        return "#ffffcc"  # light yellow
+        return "#ffffcc"  # yellow
     colors = ["#f0f8ff", "#e6ffe6", "#fff0f5", "#fffdd0", "#e0ffff", "#f5f5dc"]
     idx = int(hashlib.sha256(sender.encode()).hexdigest(), 16) % len(colors)
     return colors[idx]
@@ -32,7 +32,7 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
-# Page config and styles
+# Streamlit config and responsive styles
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
@@ -44,27 +44,33 @@ st.markdown("""
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #eee;
         }
+
         .message-box {
             border-radius: 10px;
             padding: 0.75rem;
             margin: 0.25rem 0;
             display: flex;
-            flex-direction: row;
+            align-items: flex-start;
             font-size: 0.95rem;
             border-left: 5px solid #ccc;
+            width: 100%;
+            word-break: break-word;
         }
+
         .sender-header {
             font-weight: 600;
             color: #333;
             margin-bottom: 0.25rem;
         }
+
         .timestamp {
             font-size: 0.75rem;
             color: #888;
             margin-left: 0.5rem;
         }
+
         .avatar {
-            width: 2.2rem;
+            min-width: 2.2rem;
             height: 2.2rem;
             border-radius: 50%;
             background: #ccc;
@@ -73,17 +79,40 @@ st.markdown("""
             align-items: center;
             justify-content: center;
             margin-right: 0.75rem;
+            flex-shrink: 0;
         }
+
         .chat-scroll-wrapper {
-            max-height: 70vh;
+            max-height: 65vh;
             overflow-y: auto;
             padding-right: 1rem;
             margin-top: 1rem;
             border-top: 1px solid #eee;
             scrollbar-gutter: stable;
         }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .chat-scroll-wrapper {
+                max-height: 50vh;
+                padding-right: 0.5rem;
+            }
+
+            .message-box {
+                font-size: 0.88rem;
+                padding: 0.6rem;
+            }
+
+            .avatar {
+                width: 1.8rem;
+                height: 1.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Scrollbar styling */
         .chat-scroll-wrapper::-webkit-scrollbar {
-            width: 14px;
+            width: 12px;
         }
         .chat-scroll-wrapper::-webkit-scrollbar-track {
             background: #f0f0f0;
@@ -93,6 +122,7 @@ st.markdown("""
             border-radius: 6px;
             border: 3px solid #f0f0f0;
         }
+
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
     </style>
@@ -115,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 """, unsafe_allow_html=True)
 
-# UI
+# UI: Header
 with st.container():
     st.markdown("<div class='fixed-header'>", unsafe_allow_html=True)
     st.title("💬 JC WhatsApp Multi-Chat Viewer")
@@ -123,6 +153,7 @@ with st.container():
     selected_file = st.selectbox("📂 Choose chat file to view:", chat_files)
     st.markdown("</div>", unsafe_allow_html=True)
 
+# Load + display chat
 if selected_file:
     with open(selected_file, "r", encoding="utf-8") as f:
         content = f.read().replace('\u202f', ' ').replace('\u200e', '')
