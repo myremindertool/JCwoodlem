@@ -60,7 +60,10 @@ st.markdown("""
             height: 600px;
             overflow-y: scroll;
             padding-right: 1rem;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
+        }
+        .stMultiSelect > div[data-baseweb="select"] {
+            margin-bottom: 0 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -84,10 +87,9 @@ if selected_file:
     else:
         senders = sorted(set(m['sender'] for m in messages))
         selected_senders = st.multiselect("👤 Filter by sender(s):", options=senders, default=senders)
-        filtered = [m for m in messages if m['sender'] in selected_senders]
 
         st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
-        for m in filtered:
+        for m in [msg for msg in messages if msg['sender'] in selected_senders]:
             color = sender_color(m['sender'])
             icon = "🧑‍💬"
             sender_line = f"<span class='sender-header'>{icon} {m['sender']}<span class='timestamp'> &nbsp;&nbsp;&nbsp;{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span></span>"
@@ -99,4 +101,4 @@ if selected_file:
             """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.success(f"✅ Showing {len(filtered)} messages from '{selected_file}'")
+        st.success(f"✅ Showing {len([m for m in messages if m['sender'] in selected_senders])} messages from '{selected_file}'")
