@@ -29,7 +29,7 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
-# Page config
+# Page config and styles
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
@@ -71,6 +71,14 @@ st.markdown("""
             border-top: 1px solid #eee;
             scrollbar-gutter: stable;
         }
+        .scroll-buttons {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 5;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
         a { text-decoration: none; font-weight: bold; font-size: 0.9rem; }
@@ -100,7 +108,6 @@ if selected_files:
             selected_senders = st.multiselect(f"👤 Senders ({file})", senders, default=senders, key=f"senders_{idx}")
             search_term = st.text_input(f"🔍 Search ({file})", "", key=f"search_{idx}")
 
-            # Filtered messages
             filtered_messages = [
                 m for m in messages
                 if m["sender"] in selected_senders and search_term.lower() in m["message"].lower()
@@ -108,18 +115,20 @@ if selected_files:
 
             st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-            # Scroll buttons
-            st.markdown("""
-                <div style='display:flex; gap: 10px; margin-bottom: 10px;'>
-                    <a href='#top-anchor' onclick="document.getElementById('top-anchor').scrollIntoView({behavior:'smooth'});">🔝 Top</a>
-                    <a href='#middle-anchor' onclick="document.getElementById('middle-anchor').scrollIntoView({behavior:'smooth'});">🔽 Middle</a>
-                    <a href='#bottom-anchor' onclick="document.getElementById('bottom-anchor').scrollIntoView({behavior:'smooth'});">🔚 Bottom</a>
-                </div>
-                <div id='top-anchor'></div>
-            """, unsafe_allow_html=True)
-
             # Start scroll container
             st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
+
+            # Scroll buttons (sticky)
+            st.markdown("""
+                <div id='top-anchor'></div>
+                <div class='scroll-buttons'>
+                    <div style='display:flex; gap: 10px; justify-content: center;'>
+                        <a href='#top-anchor' onclick="document.getElementById('top-anchor').scrollIntoView({behavior:'smooth'});">🔝 Top</a>
+                        <a href='#middle-anchor' onclick="document.getElementById('middle-anchor').scrollIntoView({behavior:'smooth'});">🔽 Middle</a>
+                        <a href='#bottom-anchor' onclick="document.getElementById('bottom-anchor').scrollIntoView({behavior:'smooth'});">🔚 Bottom</a>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
             if not filtered_messages:
                 st.markdown("<p style='color:gray'>No messages match your filters or search.</p>", unsafe_allow_html=True)
@@ -131,7 +140,6 @@ if selected_files:
                         st.markdown(f"### 📅 {current_date}")
                         last_date = current_date
 
-                    # Drop middle anchor at halfway point
                     if i == len(filtered_messages) // 2:
                         st.markdown("<div id='middle-anchor'></div>", unsafe_allow_html=True)
 
@@ -149,7 +157,6 @@ if selected_files:
                         </div>
                     """, unsafe_allow_html=True)
 
-                # Bottom anchor
                 st.markdown("<div id='bottom-anchor'></div>", unsafe_allow_html=True)
 
             st.markdown("</div>", unsafe_allow_html=True)
