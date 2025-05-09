@@ -29,6 +29,7 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
+# Set page and remove layout spacing
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 
 st.markdown("""
@@ -71,6 +72,8 @@ st.markdown("""
             border-top: 1px solid #eee;
             scrollbar-gutter: stable;
         }
+        section.main > div { padding-top: 0rem !important; }
+        .block-container { padding-top: 0rem !important; }
     </style>
 """, unsafe_allow_html=True)
 
