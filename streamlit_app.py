@@ -8,7 +8,7 @@ import hashlib
 def parse_chat(content):
     android_pattern = re.compile(r"(\d{2}/\d{2}/\d{4}), (\d{1,2}:\d{2}) - (.*?): (.*)")
     iphone_pattern = re.compile(r"\[(\d{2}/\d{2}/\d{4}), (\d{1,2}:\d{2}:\d{2} [APMapm]{2})\] (.*?): (.*)")
-
+    
     messages = []
 
     for match in android_pattern.findall(content):
@@ -90,7 +90,9 @@ if selected_file:
         senders = sorted(set(m['sender'] for m in messages))
         selected_senders = st.multiselect("👤 Filter by sender(s):", options=senders, default=senders)
 
-        st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
+        st.markdown("""
+            <div class='chat-scroll-wrapper'>
+        """, unsafe_allow_html=True)
 
         for m in [msg for msg in messages if msg['sender'] in selected_senders]:
             color = sender_color(m['sender'])
