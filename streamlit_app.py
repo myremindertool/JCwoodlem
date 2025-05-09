@@ -18,7 +18,8 @@ def parse_chat(content):
             dt = datetime.strptime(f"{match[0]} {match[1]}", "%d/%m/%Y %I:%M:%S %p")
             messages.append({"datetime": dt, "sender": match[2], "message": match[3]})
         except: continue
-    return sorted(messages, key=lambda x: x["datetime"])
+    # ✅ Sort newest to oldest
+    return sorted(messages, key=lambda x: x["datetime"], reverse=True)
 
 def sender_color(sender):
     colors = ["#f0f8ff", "#e6ffe6", "#fff0f5", "#fffdd0", "#e0ffff", "#f5f5dc"]
@@ -142,7 +143,7 @@ if selected_file:
 
         st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-        # Chat display area with custom scroll
+        # Chat display area with scroll
         st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
 
         if not filtered_messages:
