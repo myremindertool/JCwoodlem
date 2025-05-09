@@ -40,7 +40,7 @@ st.markdown("""
         .message-box {
             border-radius: 10px;
             padding: 0.75rem;
-            margin: 0.5rem 0;
+            margin: 0.25rem 0;
             display: flex;
             flex-direction: column;
             font-size: 0.95rem;
@@ -56,17 +56,11 @@ st.markdown("""
             color: #888;
             margin-left: 0.5rem;
         }
-        .chat-area {
-            max-height: 600px;
-            overflow-y: scroll;
-            padding-right: 1rem;
-        }
         .chat-scroll-wrapper {
             height: 600px;
-            overflow-y: auto;
-        }
-        .icon {
-            margin-right: 6px;
+            overflow-y: scroll;
+            padding-right: 1rem;
+            margin-top: 1rem;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -92,18 +86,17 @@ if selected_file:
         selected_senders = st.multiselect("👤 Filter by sender(s):", options=senders, default=senders)
         filtered = [m for m in messages if m['sender'] in selected_senders]
 
-        with st.container():
-            st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
-            for m in filtered:
-                color = sender_color(m['sender'])
-                icon = "🗣️"
-                sender_line = f"<span class='sender-header'>{icon} {m['sender']}<span class='timestamp'> &nbsp;&nbsp;&nbsp;{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span></span>"
-                st.markdown(f"""
-                    <div class='message-box' style='background-color: {color};'>
-                        {sender_line}
-                        <div>{m['message']}</div>
-                    </div>
-                """, unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
+        for m in filtered:
+            color = sender_color(m['sender'])
+            icon = "🧑‍💬"
+            sender_line = f"<span class='sender-header'>{icon} {m['sender']}<span class='timestamp'> &nbsp;&nbsp;&nbsp;{m['datetime'].strftime('%d %b %Y • %I:%M %p')}</span></span>"
+            st.markdown(f"""
+                <div class='message-box' style='background-color: {color};'>
+                    {sender_line}
+                    <div>{m['message']}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         st.success(f"✅ Showing {len(filtered)} messages from '{selected_file}'")
