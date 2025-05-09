@@ -18,10 +18,11 @@ def parse_chat(content):
             dt = datetime.strptime(f"{match[0]} {match[1]}", "%d/%m/%Y %I:%M:%S %p")
             messages.append({"datetime": dt, "sender": match[2], "message": match[3]})
         except: continue
-    return sorted(messages, key=lambda x: x["datetime"], reverse=True)  # latest first
+    return sorted(messages, key=lambda x: x["datetime"], reverse=True)
 
 def sender_color(sender):
-    if sender.lower() == "reshmi":
+    clean_sender = sender.strip().lower()
+    if "reshmi" in clean_sender:
         return "#ffffcc"  # light yellow
     colors = ["#f0f8ff", "#e6ffe6", "#fff0f5", "#fffdd0", "#e0ffff", "#f5f5dc"]
     idx = int(hashlib.sha256(sender.encode()).hexdigest(), 16) % len(colors)
@@ -31,7 +32,7 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
-# Streamlit config and styles
+# Page config and styles
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
@@ -81,7 +82,6 @@ st.markdown("""
             border-top: 1px solid #eee;
             scrollbar-gutter: stable;
         }
-
         .chat-scroll-wrapper::-webkit-scrollbar {
             width: 14px;
         }
@@ -93,7 +93,6 @@ st.markdown("""
             border-radius: 6px;
             border: 3px solid #f0f0f0;
         }
-
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
     </style>
@@ -116,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 """, unsafe_allow_html=True)
 
-# Header and Filters
+# UI
 with st.container():
     st.markdown("<div class='fixed-header'>", unsafe_allow_html=True)
     st.title("💬 JC WhatsApp Multi-Chat Viewer")
@@ -124,7 +123,6 @@ with st.container():
     selected_file = st.selectbox("📂 Choose chat file to view:", chat_files)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Load and display chat
 if selected_file:
     with open(selected_file, "r", encoding="utf-8") as f:
         content = f.read().replace('\u202f', ' ').replace('\u200e', '')
@@ -143,7 +141,6 @@ if selected_file:
 
         st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-        # Chat display
         st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
 
         if not filtered_messages:
