@@ -29,7 +29,7 @@ def get_initials(name):
     parts = name.strip().split()
     return (parts[0][0] + parts[-1][0]).upper() if len(parts) > 1 else parts[0][0].upper()
 
-# Page setup
+# Page config
 st.set_page_config(page_title="JC WhatsApp Chat Viewer", layout="wide")
 st.markdown("""
     <style>
@@ -73,6 +73,7 @@ st.markdown("""
         }
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
+        a { text-decoration: none; font-weight: bold; font-size: 0.9rem; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -99,36 +100,56 @@ if selected_files:
             selected_senders = st.multiselect(f"👤 Senders ({file})", senders, default=senders, key=f"senders_{idx}")
             search_term = st.text_input(f"🔍 Search ({file})", "", key=f"search_{idx}")
 
-            match_count = sum(1 for m in messages if m['sender'] in selected_senders and search_term.lower() in m['message'].lower())
-            st.info(f"Parsed {len(messages)} messages. Showing {match_count} messages after filters.")
+            # Filtered messages
+            filtered_messages = [
+                m for m in messages
+                if m["sender"] in selected_senders and search_term.lower() in m["message"].lower()
+            ]
 
+            st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
+
+            # Scroll buttons
+            st.markdown("""
+                <div style='display:flex; gap: 10px; margin-bottom: 10px;'>
+                    <a href='#top-anchor' onclick="document.getElementById('top-anchor').scrollIntoView({behavior:'smooth'});">🔝 Top</a>
+                    <a href='#middle-anchor' onclick="document.getElementById('middle-anchor').scrollIntoView({behavior:'smooth'});">🔽 Middle</a>
+                    <a href='#bottom-anchor' onclick="document.getElementById('bottom-anchor').scrollIntoView({behavior:'smooth'});">🔚 Bottom</a>
+                </div>
+                <div id='top-anchor'></div>
+            """, unsafe_allow_html=True)
+
+            # Start scroll container
             st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
-            any_rendered = False
-            last_date = ""
-            for m in messages:
-                if m["sender"] not in selected_senders or search_term.lower() not in m["message"].lower():
-                    continue
-                current_date = m['datetime'].strftime('%d %b %Y')
-                if current_date != last_date:
-                    st.markdown(f"### 📅 {current_date}")
-                    last_date = current_date
 
-                initials = get_initials(m['sender'])
-                avatar = f"<div class='avatar'>{initials}</div>"
-                color = sender_color(m['sender'])
-                sender_line = f"<span class='sender-header'>{m['sender']}<span class='timestamp'> &nbsp;&nbsp;{m['datetime'].strftime('%I:%M %p')}</span></span>"
-                st.markdown(f"""
-                    <div class='message-box' style='background-color: {color};'>
-                        {avatar}
-                        <div>
-                            {sender_line}
-                            <div>{m['message']}</div>
+            if not filtered_messages:
+                st.markdown("<p style='color:gray'>No messages match your filters or search.</p>", unsafe_allow_html=True)
+            else:
+                last_date = ""
+                for i, m in enumerate(filtered_messages):
+                    current_date = m['datetime'].strftime('%d %b %Y')
+                    if current_date != last_date:
+                        st.markdown(f"### 📅 {current_date}")
+                        last_date = current_date
+
+                    # Drop middle anchor at halfway point
+                    if i == len(filtered_messages) // 2:
+                        st.markdown("<div id='middle-anchor'></div>", unsafe_allow_html=True)
+
+                    initials = get_initials(m['sender'])
+                    avatar = f"<div class='avatar'>{initials}</div>"
+                    color = sender_color(m['sender'])
+                    sender_line = f"<span class='sender-header'>{m['sender']}<span class='timestamp'> &nbsp;&nbsp;{m['datetime'].strftime('%I:%M %p')}</span></span>"
+                    st.markdown(f"""
+                        <div class='message-box' style='background-color: {color};'>
+                            {avatar}
+                            <div>
+                                {sender_line}
+                                <div>{m['message']}</div>
+                            </div>
                         </div>
-                    </div>
-                """, unsafe_allow_html=True)
-                any_rendered = True
+                    """, unsafe_allow_html=True)
 
-            if not any_rendered:
-                st.markdown("<p style='color:gray; font-style: italic;'>No messages match your filters or search.</p>", unsafe_allow_html=True)
+                # Bottom anchor
+                st.markdown("<div id='bottom-anchor'></div>", unsafe_allow_html=True)
 
             st.markdown("</div>", unsafe_allow_html=True)
