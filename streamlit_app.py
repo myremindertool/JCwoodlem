@@ -77,13 +77,31 @@ st.markdown("""
             padding-right: 1rem;
             margin-top: 1rem;
             border-top: 1px solid #eee;
+            scrollbar-gutter: stable;
         }
         section.main > div { padding-top: 0rem !important; }
         .block-container { padding-top: 0rem !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# Header + Filters (sticky)
+# JavaScript to trap scroll inside chat container
+st.markdown("""
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const chatArea = document.querySelector('.chat-scroll-wrapper');
+  if (chatArea) {
+    chatArea.addEventListener('wheel', function(e) {
+      const canScroll = this.scrollHeight > this.clientHeight;
+      if (canScroll) {
+        e.stopPropagation();
+      }
+    }, { passive: true });
+  }
+});
+</script>
+""", unsafe_allow_html=True)
+
+# Header and Filters
 with st.container():
     st.markdown("<div class='fixed-header'>", unsafe_allow_html=True)
     st.title("💬 JC WhatsApp Multi-Chat Viewer")
@@ -109,7 +127,7 @@ if selected_file:
 
         st.info(f"Parsed {len(messages)} messages. Showing {len(filtered_messages)} after filters.")
 
-        # Scrollable chat area
+        # Scrollable chat view
         st.markdown("<div class='chat-scroll-wrapper'>", unsafe_allow_html=True)
 
         if not filtered_messages:
